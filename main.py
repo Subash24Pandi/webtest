@@ -59,28 +59,19 @@ async def test_tts():
 
     headers = {
         "Authorization": f"Bearer {api_key}",
-        "Cartesia-Version": "2025-04-16",
         "Content-Type": "application/json"
     }
 
     payload = {
-        "model_id": "sonic",
-        "voice": {
-            "mode": "id",
-            "id": "79a125e8-cd45-4c13-8a67-188112f4dd22"
-        },
-        "transcript": "Hello, your AI voice system is now fully operational.",
-        "output_format": {
-            "container": "wav",
-            "encoding": "pcm_s16le",
-            "sample_rate": 16000
-        }
+        "voice_id": "79a125e8-cd45-4c13-8a67-188112f4dd22",
+        "text": "Hello, your AI voice system is now fully operational.",
+        "format": "wav"
     }
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
-                "https://api.cartesia.ai/v1/tts",
+                "https://api.play.cartesia.ai/v1/tts",
                 headers=headers,
                 json=payload
             )
