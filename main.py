@@ -5,10 +5,11 @@ from fastapi.responses import Response
 from groq import Groq
 from dotenv import load_dotenv
 
-# Load .env
+# Load environment variables
 load_dotenv()
 
 app = FastAPI()
+
 
 # ==============================
 # ROOT
@@ -23,11 +24,12 @@ async def root():
 # ==============================
 @app.get("/test-llm")
 async def test_llm():
-    try:
-        groq_key = os.getenv("GROQ_API_KEY")
-        if not groq_key:
-            raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
+    groq_key = os.getenv("GROQ_API_KEY")
 
+    if not groq_key:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
+
+    try:
         client = Groq(api_key=groq_key)
 
         response = client.chat.completions.create(
@@ -53,7 +55,7 @@ async def test_tts():
     api_key = os.getenv("CARTESIA_API_KEY")
 
     if not api_key:
-        return {"error": "CARTESIA_API_KEY not set"}
+        raise HTTPException(status_code=500, detail="CARTESIA_API_KEY not set")
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -67,7 +69,7 @@ async def test_tts():
             "mode": "id",
             "id": "79a125e8-cd45-4c13-8a67-188112f4dd22"
         },
-        "transcript": "Hello test",
+        "transcript": "Hello, your AI voice system is now fully operational.",
         "output_format": {
             "container": "wav",
             "encoding": "pcm_s16le",
@@ -77,22 +79,22 @@ async def test_tts():
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-           response = await client.post(
-    "https://api.cartesia.ai/tts",
-    headers=headers,
-    json=payload
-)
-        return {
-            "status_code": response.status_code,
-            "headers": dict(response.headers),
-            "content_length": len(response.content),
-            "first_100_bytes": str(response.content[:100])
-        }
+            response = await client.post(
+                "https://api.cartesia.ai/v1/tts",
+                headers=headers,
+                json=payload
+            )
+
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=response.text
+            )
+
+        return Response(
+            content=response.content,
+            media_type="audio/wav"
+        )
 
     except Exception as e:
-        import traceback
-        return {
-            "exception_type": str(type(e)),
-            "exception_message": str(e),
-            "traceback": traceback.format_exc()
-        }
+        raise HTTPException(status_code=500, detail=str(e))
