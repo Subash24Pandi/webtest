@@ -77,12 +77,11 @@ async def test_tts():
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                "https://api.play.cartesia.ai/v1/tts",
-                headers=headers,
-                json=payload
-            )
-
+           response = await client.post(
+    "https://api.cartesia.ai/tts",
+    headers=headers,
+    json=payload
+)
         return {
             "status_code": response.status_code,
             "headers": dict(response.headers),
